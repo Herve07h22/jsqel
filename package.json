@@ -1,0 +1,33 @@
+{
+  "name": "jsqel",
+  "version": "1.0.0",
+  "description": "Fullstack JS framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Herve07h22/jsqel.git"
+  },
+  "keywords": [
+    "Javascript",
+    "fullstack",
+    "sql",
+    "framework",
+    "react"
+  ],
+  "author": "Camilab",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Herve07h22/jsqel/issues"
+  },
+  "homepage": "https://github.com/Herve07h22/jsqel#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "pg-promise": "^9.0.0",
+    "sqlite3": "^4.0.9"
+  }
+}
