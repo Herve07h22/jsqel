@@ -58,10 +58,10 @@ const checkAuthorization = (query, params, headers ) => {
     return [false, {}]
 }
 
-app.post('/:query',  async (req, res) => {
+app.post('/:namespace/:query',  async (req, res) => {
     try {
         // Look for query
-        let query = queriesStore[req.params.query]
+        let query = queriesStore[req.params.namespace][req.params.query]
         if (!query) throw "This query does not exist"
         
         // Clone json body request containing parameters, because beforeQueryHook may add some parameters
@@ -125,10 +125,11 @@ app.post('/:query',  async (req, res) => {
 })
 
 // TODO : add a configuration object to queries
-const registerQuery = query => {
-    console.log("registering ", query.name) 
-    queriesStore[query.name] = Object.assign( {}, query)
-    // console.log(queriesStore)
+const registerQuery = (namespace, query) => {
+    console.log("registering ", namespace, query.name) 
+    if (!queriesStore[namespace]) queriesStore[namespace] = {}
+    queriesStore[namespace][query.name] = Object.assign( {}, query)
+    console.log(queriesStore)
 }
 
 module.exports = (dbUri , secret , debug, staticPath = '') => {
@@ -143,8 +144,8 @@ module.exports = (dbUri , secret , debug, staticPath = '') => {
     return {
         encrypt : text => encrypt(text),
         migrate :  name => jsqeldb.migrate(name),
-        register : endpoints => endpoints.forEach( e => registerQuery(e) ),
-        migrateAndRegister : ({ migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(e) ) ) ,
+        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e) ),
+        migrateAndRegister : (namespace, { migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(namespace, e) ) ) ,
         run : (port=5000) => app.listen(port, () => console.log('Running on port :', port)),
      }
 
