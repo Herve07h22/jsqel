@@ -1,6 +1,6 @@
 {
   "name": "jsqel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fullstack JS framework",
   "main": "index.js",
   "scripts": {
@@ -15,9 +15,10 @@
     "fullstack",
     "sql",
     "framework",
-    "react"
+    "react",
+    "postgresql"
   ],
-  "author": "Camilab",
+  "author": "Camilab <contact@camilab.co> (https://camilab.co)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Herve07h22/jsqel/issues"

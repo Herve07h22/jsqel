@@ -152,19 +152,27 @@ const get_reference_with_filter = {
 }
 
 const get_reference = {
-    name : 'get_reference_with_filter',
-    sql : 'SELECT * FROM ${table:name} WHERE ${target:name}={target_id} ORDER BY ${filter_sort:name} ${asc_or_desc} LIMIT ${perPage} OFFSET ${page};',
+    name : 'get_reference',
+    sql : 'SELECT * FROM ${table:name} WHERE ${target:name}=${target_id} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
-        asc_or_desc : checkAscOrDesc ,
         table       : checkNonEmptyString("table cannot be empty"),
         target      : checkNonEmptyString("target cannot be empty"),
         target_id   : checkNonEmptyString("target_id cannot be empty"),
-        filter_sort : checkNonEmptyString("filter_sort cannot be empty"),
         perPage     : checkValidInterger("perPage should be a valid integer"),
         page        : checkValidInterger("page should be a valid integer"),
     },
 }
 
-module.exports = { queries : [ get_list_with_filter, get_list, get_one, create, update_one, delete_one, get_reference_with_filter, get_reference, count_list_with_filter, count_list, get_many, delete_many ]}
+const count_reference = {
+    name : 'count_reference',
+    sql : 'SELECT COUNT(id) as total FROM ${table:name} WHERE ${target:name}=${target_id};',
+    restricted : ['Admin'],    // Mind the Capital
+    params : {
+        table       : checkNonEmptyString("table cannot be empty"),
+        target      : checkNonEmptyString("target cannot be empty"),
+        target_id   : checkNonEmptyString("target_id cannot be empty"),
+    },
+}
 
+module.exports = { queries : [ get_list_with_filter, get_list, get_one, create, update_one, delete_one, get_reference_with_filter, get_reference, count_list_with_filter, count_list, get_many, delete_many, count_reference ]}

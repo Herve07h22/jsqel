@@ -28,7 +28,7 @@ const close = () => {
     if (sqliteConnexion) sqliteConnexion.close()
 }
 
-const  isEmpty = val => (val === undefined || val == null ) ? true : false
+const isEmpty = val => (val === undefined ) ? true : false // null or zero may be relevant
 
 const paramsReducer = ( query, params={} ) => {
     // Remove unnecessary params
