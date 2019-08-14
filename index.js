@@ -58,7 +58,7 @@ const checkAuthorization = (query, params, headers ) => {
     return [false, {}]
 }
 
-app.post('/:namespace/:query',  async (req, res) => {
+app.post('/:namespace/:query',  async (req, res, next) => {
     try {
         // Look for query
         let query = queriesStore[req.params.namespace][req.params.query]
@@ -75,6 +75,14 @@ app.post('/:namespace/:query',  async (req, res) => {
 
         if (authorized) {
             
+            // Is it a direct route ?
+            if (query.route) {
+                console.log("Processing direct route")
+                // Add credentials
+                req.paramsWithCredentials = paramsWithCredentials
+                return next()
+            }
+
             // Execute validation tobuild an array like [ {success, key, value, message}, {success, key, value, message} ]
             console.log("query.params :", query.params)
             const paramsValidation = query.params ? Object.keys(query.params).map( key => Object.assign({},query.params[key](paramsWithCredentials[key]),{key}) ) : []
@@ -129,7 +137,8 @@ const registerQuery = (namespace, query) => {
     console.log("registering ", namespace, query.name) 
     if (!queriesStore[namespace]) queriesStore[namespace] = {}
     queriesStore[namespace][query.name] = Object.assign( {}, query)
-    console.log(queriesStore)
+    // Is it a direct route ?
+    if (query.route) query.route(app)
 }
 
 module.exports = (dbUri , secret , debug, staticPath = '') => {
