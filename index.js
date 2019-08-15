@@ -144,7 +144,11 @@ const registerQuery = (namespace, query) => {
 module.exports = (dbUri , secret , debug, staticPath = '') => {
     
     console.log('staticPath:', staticPath)
-    if (staticPath) app.use(express.static(staticPath))
+    if (Array.isArray(staticPath)) {
+        staticPath.forEach( s => app.use(s.route, express.static(s.path)))
+    } else {
+        if (staticPath) app.use(staticPath.route || '/', express.static(staticPath.path))
+    }
 
     SECRET = secret
 
