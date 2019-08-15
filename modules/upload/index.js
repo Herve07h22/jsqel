@@ -1,14 +1,17 @@
-
 var multer  = require('multer')
 
 // set Multer storage
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads') // Note: You are responsible for creating the directory when providing destination as a function
+      cb(null, 'uploads') // Note: You are responsible for creating the directory when providing destination as a function
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now())
-  },
+      const splittedOriginalFileName = file.originalname.split('.')
+      const OriginalFileName = splittedOriginalFileName.slice(0, -1).join('.')
+      const OriginalExtension = splittedOriginalFileName.slice(-1)
+      const UniqueFileName = OriginalFileName + '-' + Date.now() + '.' + OriginalExtension
+      cb(null, UniqueFileName)
+},
 })
 
 // Filter files allowed to be uploaded
@@ -35,10 +38,10 @@ function fileFilter (req, file, cb) {
 var uploadEngine = multer({ storage: storage, fileFilter:fileFilter })
 
 // Adding upload route
-
 const uploadRoute = app => {
   app.post('/direct/upload', uploadEngine.single('myFile'), (req, res, next) => {
   // Credentials are injected in req.paramsWithCredentials if needed
+  console.log("Uploading :", req.file)
   const file = req.file
   if (!file) {
     const error = new Error('Please upload a file')
