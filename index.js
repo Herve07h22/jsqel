@@ -134,12 +134,12 @@ const createApiRoute = (app, apiUrlBase) =>
     })
 
 // TODO : add a configuration object to queries
-const registerQuery = (namespace, query) => {
+const registerQuery = (namespace, query, apiUrlBase) => {
     console.log("registering ", namespace, query.name) 
     if (!queriesStore[namespace]) queriesStore[namespace] = {}
     queriesStore[namespace][query.name] = Object.assign( {}, query)
     // Is it a direct route ?
-    if (query.route) query.route(app)
+    if (query.route) query.route(app, namespace, apiUrlBase)
 }
 
 module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
@@ -159,7 +159,7 @@ module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
     return {
         encrypt : text => encrypt(text),
         migrate :  name => jsqeldb.migrate(name),
-        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e) ),
+        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase) ),
         migrateAndRegister : (namespace, { migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(namespace, e) ) ) ,
         run : (port=5000) => app.listen(port, () => console.log('Running on port :', port)),
      }

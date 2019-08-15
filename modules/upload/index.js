@@ -38,8 +38,8 @@ function fileFilter (req, file, cb) {
 var uploadEngine = multer({ storage: storage, fileFilter:fileFilter })
 
 // Adding upload route
-const uploadRoute = app => {
-  app.post('/direct/upload', uploadEngine.single('myFile'), (req, res, next) => {
+const uploadRoute = (app, namespace, apiUrlBase) => {
+  app.post(apiUrlBase + '/' + namespace + '/upload', uploadEngine.single('myFile'), (req, res, next) => {
   // Credentials are injected in req.paramsWithCredentials if needed
   console.log("Uploading :", req.file)
   const file = req.file
