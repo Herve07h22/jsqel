@@ -39,6 +39,7 @@ var uploadEngine = multer({ storage: storage, fileFilter:fileFilter })
 
 // Adding upload route
 const uploadRoute = (app, namespace, apiUrlBase) => {
+  console.log('Registering direct route : ', apiUrlBase + '/' + namespace + '/upload')
   app.post(apiUrlBase + '/' + namespace + '/upload', uploadEngine.single('myFile'), (req, res, next) => {
   // Credentials are injected in req.paramsWithCredentials if needed
   console.log("Uploading :", req.file)

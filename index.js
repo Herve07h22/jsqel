@@ -154,12 +154,12 @@ module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
     SECRET = secret
 
     jsqeldb.connect(dbUri, debug)
-    createApiRoute(app, apiUrlBase)
+    createApiRoute(app, apiUrlBase || '')
 
     return {
         encrypt : text => encrypt(text),
         migrate :  name => jsqeldb.migrate(name),
-        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase) ),
+        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase || '') ),
         migrateAndRegister : (namespace, { migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(namespace, e) ) ) ,
         run : (port=5000) => app.listen(port, () => console.log('Running on port :', port)),
      }
