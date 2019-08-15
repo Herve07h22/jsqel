@@ -135,11 +135,11 @@ const createApiRoute = (app, apiUrlBase) =>
 
 // TODO : add a configuration object to queries
 const registerQuery = (namespace, query, apiUrlBase) => {
-    console.log("registering ", namespace, query.name) 
+    console.log("Registering ", namespace, query.name, apiUrlBase) 
     if (!queriesStore[namespace]) queriesStore[namespace] = {}
     queriesStore[namespace][query.name] = Object.assign( {}, query)
     // Is it a direct route ?
-    if (query.route) query.route(app, namespace, apiUrlBase)
+    if (query.route) query.route(app, namespace, apiUrlBase || '')
 }
 
 module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
