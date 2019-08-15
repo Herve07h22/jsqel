@@ -58,79 +58,80 @@ const checkAuthorization = (query, params, headers ) => {
     return [false, {}]
 }
 
-app.post('/:namespace/:query',  async (req, res, next) => {
-    try {
-        // Look for query
-        let query = queriesStore[req.params.namespace][req.params.query]
-        if (!query) throw "This query does not exist"
-        
-        // Clone json body request containing parameters, because beforeQueryHook may add some parameters
-        let params = Object.assign({}, req.body)
-        
-        console.log("Controller is processing :", query, params)
-        
-        // Check if restricted
-        const [ authorized, paramsWithCredentials] = checkAuthorization(query, params, req.headers )
-        console.log("Authorized ? :", authorized, paramsWithCredentials)
-
-        if (authorized) {
+const createApiRoute = (app, apiUrlBase) =>
+    app.post(apiUrlBase+'/:namespace/:query',  async (req, res, next) => {
+        try {
+            // Look for query
+            let query = queriesStore[req.params.namespace][req.params.query]
+            if (!query) throw "This query does not exist"
             
-            // Is it a direct route ?
-            if (query.route) {
-                console.log("Processing direct route")
-                // Add credentials
-                req.paramsWithCredentials = paramsWithCredentials
-                return next()
+            // Clone json body request containing parameters, because beforeQueryHook may add some parameters
+            let params = Object.assign({}, req.body)
+            
+            console.log("Controller is processing :", query, params)
+            
+            // Check if restricted
+            const [ authorized, paramsWithCredentials] = checkAuthorization(query, params, req.headers )
+            console.log("Authorized ? :", authorized, paramsWithCredentials)
+
+            if (authorized) {
+                
+                // Is it a direct route ?
+                if (query.route) {
+                    console.log("Processing direct route")
+                    // Add credentials
+                    req.paramsWithCredentials = paramsWithCredentials
+                    return next()
+                }
+
+                // Execute validation tobuild an array like [ {success, key, value, message}, {success, key, value, message} ]
+                console.log("query.params :", query.params)
+                const paramsValidation = query.params ? Object.keys(query.params).map( key => Object.assign({},query.params[key](paramsWithCredentials[key]),{key}) ) : []
+                console.log("paramsValidation :", paramsValidation)
+
+                // If anything wrong, send an error
+                const paramsErrors = paramsValidation.filter( result => result.success !== true  )
+                if (paramsErrors && paramsErrors.length) {
+                    console.log("paramsErrors :", paramsErrors)
+                    res.status(400).json(paramsErrors)
+                    return
+                } else {
+                    // update params with their validator function
+                    const validatedParams = paramsValidation.reduce( (acc, val) => Object.assign({}, acc, { [val.key] : val.value } ) , {}  )
+                    console.log("validatedParams :", validatedParams)
+
+                    // Process params if there is any beforeQuery hook
+                    const paramsProcessedByBeforeQuery = query.beforeQuery ? query.beforeQuery(query, validatedParams, { jsqeldb, encrypt }) : validatedParams
+                    console.log("paramsProcessedByBeforeQuery :", paramsProcessedByBeforeQuery)
+
+                    // Alter query if there is alterQuery hook
+                    const sqlQuery = query.alterQuery ? query.alterQuery(query, validatedParams, { jsqeldb, encrypt }) : query.sql
+
+                    // Compute the query
+                    const queryResult = await jsqeldb.executeQuery(sqlQuery, paramsProcessedByBeforeQuery)
+                    console.log("queryResult :", queryResult)
+
+                    // Process results if there is any beforeQuery hook
+                    const resultsProcessedByAfterQuery = query.afterQuery ? query.afterQuery(query, validatedParams, queryResult, { jsqeldb, encrypt }) : queryResult
+                    console.log("resultsProcessedByAfterQuery :", resultsProcessedByAfterQuery)
+
+                    // And send, taking an optional status in the results 
+                    // If the query includes a template file : send the render. If not, send the json
+                    if (query.template) {
+                            res.setHeader('Content-Type', 'text/html');
+                            res.status(resultsProcessedByAfterQuery.status || 200).render(query.template, resultsProcessedByAfterQuery)
+                    } else res.status(resultsProcessedByAfterQuery.status || 200).json(resultsProcessedByAfterQuery)
+
+                    return
+                }
             }
-
-            // Execute validation tobuild an array like [ {success, key, value, message}, {success, key, value, message} ]
-            console.log("query.params :", query.params)
-            const paramsValidation = query.params ? Object.keys(query.params).map( key => Object.assign({},query.params[key](paramsWithCredentials[key]),{key}) ) : []
-            console.log("paramsValidation :", paramsValidation)
-
-            // If anything wrong, send an error
-            const paramsErrors = paramsValidation.filter( result => result.success !== true  )
-            if (paramsErrors && paramsErrors.length) {
-                console.log("paramsErrors :", paramsErrors)
-                res.status(400).json(paramsErrors)
-                return
-            } else {
-                // update params with their validator function
-                const validatedParams = paramsValidation.reduce( (acc, val) => Object.assign({}, acc, { [val.key] : val.value } ) , {}  )
-                console.log("validatedParams :", validatedParams)
-
-                // Process params if there is any beforeQuery hook
-                const paramsProcessedByBeforeQuery = query.beforeQuery ? query.beforeQuery(query, validatedParams, { jsqeldb, encrypt }) : validatedParams
-                console.log("paramsProcessedByBeforeQuery :", paramsProcessedByBeforeQuery)
-
-                // Alter query if there is alterQuery hook
-                const sqlQuery = query.alterQuery ? query.alterQuery(query, validatedParams, { jsqeldb, encrypt }) : query.sql
-
-                // Compute the query
-                const queryResult = await jsqeldb.executeQuery(sqlQuery, paramsProcessedByBeforeQuery)
-                console.log("queryResult :", queryResult)
-
-                // Process results if there is any beforeQuery hook
-                const resultsProcessedByAfterQuery = query.afterQuery ? query.afterQuery(query, validatedParams, queryResult, { jsqeldb, encrypt }) : queryResult
-                console.log("resultsProcessedByAfterQuery :", resultsProcessedByAfterQuery)
-
-                // And send, taking an optional status in the results 
-                // If the query includes a template file : send the render. If not, send the json
-                if (query.template) {
-                        res.setHeader('Content-Type', 'text/html');
-                        res.status(resultsProcessedByAfterQuery.status || 200).render(query.template, resultsProcessedByAfterQuery)
-                } else res.status(resultsProcessedByAfterQuery.status || 200).json(resultsProcessedByAfterQuery)
-
-                return
-            }
+            res.status(401).send('Unauthorized')
         }
-        res.status(401).send('Unauthorized')
-    }
-    catch(error) {
-        console.log(error)
-        res.status(400).send(error)
-    }
-})
+        catch(error) {
+            console.log(error)
+            res.status(400).send(error)
+        }
+    })
 
 // TODO : add a configuration object to queries
 const registerQuery = (namespace, query) => {
@@ -141,7 +142,7 @@ const registerQuery = (namespace, query) => {
     if (query.route) query.route(app)
 }
 
-module.exports = (dbUri , secret , debug, staticPath = '') => {
+module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
     
     console.log('staticPath:', staticPath)
     if (Array.isArray(staticPath)) {
@@ -153,6 +154,7 @@ module.exports = (dbUri , secret , debug, staticPath = '') => {
     SECRET = secret
 
     jsqeldb.connect(dbUri, debug)
+    createApiRoute(app, apiUrlBase)
 
     return {
         encrypt : text => encrypt(text),
