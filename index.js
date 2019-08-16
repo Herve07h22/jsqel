@@ -81,6 +81,8 @@ const createApiRoute = (app, apiUrlBase) =>
                     console.log("Processing direct route")
                     // Add credentials
                     req.paramsWithCredentials = paramsWithCredentials
+                    // Add a hook to execute queries
+                    req.executeQuery = jsqeldb.executeQuery
                     return next()
                 }
 
