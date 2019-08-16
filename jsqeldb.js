@@ -34,10 +34,10 @@ const paramsReducer = ( query, params={} ) => {
     // Remove unnecessary params
     console.log("Reducing params :", params)
     var reducedParams = {}
-    const listeOfParameters = query.match(/\$\{(\w+)(:name)?(:csv)?\}/g)
+    const listeOfParameters = query.match(/\$\{(\w+)(:name)?(:csv)?(:value)?\}/g)
     console.log("listeOfParameters :", listeOfParameters)
     if (listeOfParameters && listeOfParameters.length) {
-        let expectedParams = listeOfParameters.map( p => p.slice(2, -1).replace(':name','').replace(':csv','') )
+        let expectedParams = listeOfParameters.map( p => p.slice(2, -1).replace(':name','').replace(':csv','').replace(':value','') )
         console.log("expectedParams :", expectedParams)
         reducedParams = expectedParams.reduce( (acc, val) => isEmpty(params[val]) ? acc : Object.assign(acc, {[val]:params[val]}) , {} )
     }

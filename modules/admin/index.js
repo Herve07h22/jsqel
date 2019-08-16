@@ -7,7 +7,7 @@ const checkIsArray = message => value => Array.isArray(value) ? ({success: true,
 
 const get_list_with_filter = {
     name : 'get_list_with_filter',
-    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field} = ${filter} ORDER BY ${filter_sort:name} ${asc_or_desc} LIMIT ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field:name} = ${filter} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
@@ -35,7 +35,7 @@ const count_list_with_filter = {
 
 const get_list = {
     name : 'get_list',
-    sql : 'SELECT * FROM ${table:name} ORDER BY ${filter_sort:name} SORT_ASC_OR_DESC LIMIT ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} ORDER BY ${filter_sort:name} ${asc_or_desc:value} ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
@@ -43,10 +43,6 @@ const get_list = {
         filter_sort : checkNonEmptyString("filter_sort cannot be empty"),
         perPage     : checkValidInterger("perPage should be a valid integer"),
         page        : checkValidInterger("page should be a valid integer"),
-    },
-    alterQuery : (query, params) => {
-        // TODO : prevent SQL injection
-        return query.sql.replace('SORT_ASC_OR_DESC', params.asc_or_desc)
     },
 }
 
@@ -90,7 +86,6 @@ const create = {
         table   : checkNonEmptyString("table cannot be empty"),
         data    : value => value ? ({success: true, value}) : ({success: false, message: "data should be a valid object" })
     },
-    // beforeQuery : (query, params ) => Object.assign( {}, { column_names : Object.keys(params.data), column_values : Object.keys(params.data).map( k => params.data[k]) }) ,
 }
 
 
@@ -136,7 +131,7 @@ const delete_many = {
 
 const get_reference_with_filter = {
     name : 'get_reference_with_filter',
-    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field:name} = ${filter} AND ${target:name}={target_id} ORDER BY ${filter_sort:name} ${asc_or_desc:name} LIMIT ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field:name} = ${filter} AND ${target:name}={target_id} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
