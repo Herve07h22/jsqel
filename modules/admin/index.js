@@ -35,7 +35,7 @@ const count_list_with_filter = {
 
 const get_list = {
     name : 'get_list',
-    sql : 'SELECT * FROM ${table:name} ORDER BY ${filter_sort:name} ${asc_or_desc:value} ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
