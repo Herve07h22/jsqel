@@ -27,11 +27,12 @@ const hello = {
 
 Register your query and launch your server :
 ```javascript
-const app = jsqel(  dbUri = 'postgresql://user:pwd@postgresql.host.com:5432/db_name',
-                    secret ='anysecretkeyyouwant',
-                    debug  = process.env.NODE_ENV !== 'production',
-                    staticPath = '../frontend/build',
-)
+const app = jsqel({ dbUri : 'postgresql://user:pwd@postgresql.host.com:5432/db_name',
+                    secret :'anysecretkeyyouwant',
+                    debug  : process.env.NODE_ENV !== 'production',
+                    staticPath : '../frontend/build',
+                    apiUrlBase : ''
+                })
 app.register(namespace="test", [hello])
 app.run(5000)
 // Now API is available at : http://localhost:5000/test/hello
@@ -80,6 +81,30 @@ const private_hello = {
     beforeQuery : (query, params) => { console.log('Filter : ', params.filter); return params; },
     afterQuery  : (query, params, results) => { console.log("Got the result !"); return results; }, 
 }
+```
+
+## Direct routes
+
+Sometimes you need to implement something different from a SQL query. An upload controller for example. 
+In this case, you can configure a diret route :
+```javascript
+// Adding upload route
+const directRoute = (app, namespace, apiUrlBase) => {
+    console.log('Registering direct route : ', apiUrlBase + '/' + namespace + '/upload')
+    app.post(apiUrlBase + '/' + namespace + '/upload', (req, res, next) => {
+        // Credentials are injected in req.paramsWithCredentials if needed
+        console.log('directRoute with credentials :', req.paramsWithCredentials)
+        res.send("This is my response")
+        })
+}
+
+const direct = {
+  name : 'direct',
+  route : directRoute,
+  restricted : ['Admin'],    // Mind the Capital
+}
+
+module.exports = { queries :[ direct ] }
 ```
 
 ## Boilerplate
