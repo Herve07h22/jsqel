@@ -142,7 +142,7 @@ const registerQuery = (namespace, query, apiUrlBase) => {
     if (query.route) query.route(app, namespace, apiUrlBase || '')
 }
 
-module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
+module.exports = ({dbUri , secret , debug=false, apiUrlBase='', staticPath = ''}) => {
     
     console.log('staticPath:', staticPath)
     if (Array.isArray(staticPath)) {
@@ -154,13 +154,13 @@ module.exports = (dbUri , secret , debug, apiUrlBase='', staticPath = '') => {
     SECRET = secret
 
     jsqeldb.connect(dbUri, debug)
-    createApiRoute(app, apiUrlBase || '')
+    createApiRoute(app, apiUrlBase)
 
     return {
         encrypt : text => encrypt(text),
         migrate :  name => jsqeldb.migrate(name),
-        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase || '') ),
-        migrateAndRegister : (namespace, { migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(namespace, e) ) ) ,
+        register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase) ),
+        migrateAndRegister : (namespace, { migrations, queries }) => jsqeldb.migrate(migrations).then(queries.forEach( e => registerQuery(namespace, e, apiUrlBase) ) ) ,
         run : (port=5000) => app.listen(port, () => console.log('Running on port :', port)),
      }
 
