@@ -10,7 +10,7 @@ const connect = (uri='', debug=false) => {
     // SQLite3 or Postgres ?
     if (uri && uri.slice(0,9)==='sqlite://') {
         console.log("Creating SQLite3 connexion :", uri.slice(9))
-        sqliteConnexion = new sqlite3.Database(':memory:')
+        sqliteConnexion = new sqlite3.Database(uri.slice(9))
         console.log("Connexion OK :", sqliteConnexion)
     }
 
@@ -68,7 +68,8 @@ const executeQuery = (query, params={} ) => {
         // pg-promise PostGresql named parameters : SELECT * FROM my_table WHERE id=${param} and num=${num} ORDER BY num
         if (pgConnexion) {
             console.log("Executing query :", query, reducedParams)
-            return pgConnexion.any( query, reducedParams)
+            // Encapsulate the query in a transaction.
+            return pgConnexion.tx(t => t.any( query, reducedParams))
         }
         return new Promise( (resolve, reject) => reject(`The query ${query} cannot be executed because there is no db connection available`) )
     }

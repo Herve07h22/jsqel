@@ -7,30 +7,42 @@ const checkIsArray = message => value => Array.isArray(value) ? ({success: true,
 
 const get_list_with_filter = {
     name : 'get_list_with_filter',
-    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field:name} = ${filter} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} WHERE ALL_FILTERS ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
         table       : checkNonEmptyString("table cannot be empty"),
-        filter_field : checkNonEmptyString("filter_field cannot be empty"),
-        filter      : checkNonEmptyString("filter cannot be empty"),
+        filter      : value => value ? ({success: true, value}) : ({success: false, message: "filter should be a valid object" }),
         filter_sort : checkNonEmptyString("filter_sort cannot be empty"),
         perPage     : checkValidInterger("perPage should be a valid integer"),
         page        : checkValidInterger("page should be a valid integer"),
     },
+    beforeQuery : (query, params ) => Object.assign( {}, params, params.filter ),
+    alterQuery : (query, params) => {
+        const props = Object.keys(params.filter)
+        const formattedSet = props.map( (m,i) => m + '=${' + m + '}') // creating the formatting parameters; 
+        const joinedSet = formattedSet.join(' AND ')
+        return query.sql.replace('ALL_FILTERS', joinedSet)
+    }
 }
 
 const count_list_with_filter = {
     name : 'count_list_with_filter',
-    sql : 'SELECT COUNT(id) as total FROM ${table:name} WHERE ${filter_field:name} = ${filter};',
+    sql : 'SELECT COUNT(id) as total FROM ${table:name} WHERE ALL_FILTERS ;',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
         table       : checkNonEmptyString("table cannot be empty"),
-        filter_field : checkNonEmptyString("filter_field cannot be empty"),
-        filter      : checkNonEmptyString("filter cannot be empty"),
+        filter      : value => value ? ({success: true, value}) : ({success: false, message: "filter should be a valid object" }),
         filter_sort : checkNonEmptyString("filter_sort cannot be empty"),
     },
+    beforeQuery : (query, params ) => Object.assign( {}, params, params.filter ),
+    alterQuery : (query, params) => {
+        const props = Object.keys(params.filter)
+        const formattedSet = props.map( (m,i) => m + '=${' + m + '}') // creating the formatting parameters; 
+        const joinedSet = formattedSet.join(' AND ')
+        return query.sql.replace('ALL_FILTERS', joinedSet)
+    }
 }
 
 const get_list = {
@@ -131,19 +143,25 @@ const delete_many = {
 
 const get_reference_with_filter = {
     name : 'get_reference_with_filter',
-    sql : 'SELECT * FROM ${table:name} WHERE ${filter_field:name} = ${filter} AND ${target:name}={target_id} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
+    sql : 'SELECT * FROM ${table:name} WHERE ALL_FILTERS AND ${target:name}={target_id} ORDER BY ${filter_sort:name} ${asc_or_desc:value} LIMIT ${perPage} OFFSET ${page};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
         asc_or_desc : checkAscOrDesc ,
         table       : checkNonEmptyString("table cannot be empty"),
-        filter_field : checkNonEmptyString("filter_field cannot be empty"),
-        filter      : checkNonEmptyString("filter cannot be empty"),
+        filter      : value => value ? ({success: true, value}) : ({success: false, message: "filter should be a valid object" }),
         target      : checkNonEmptyString("target cannot be empty"),
         target_id   : checkNonEmptyString("target_id cannot be empty"),
         filter_sort : checkNonEmptyString("filter_sort cannot be empty"),
         perPage     : checkValidInterger("perPage should be a valid integer"),
         page        : checkValidInterger("page should be a valid integer"),
     },
+    beforeQuery : (query, params ) => Object.assign( {}, params, params.filter ),
+    alterQuery : (query, params) => {
+        const props = Object.keys(params.filter)
+        const formattedSet = props.map( (m,i) => m + '=${' + m + '}') // creating the formatting parameters; 
+        const joinedSet = formattedSet.join(' AND ')
+        return query.sql.replace('ALL_FILTERS', joinedSet)
+    }
 }
 
 const get_reference = {

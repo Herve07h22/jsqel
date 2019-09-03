@@ -1,6 +1,6 @@
 {
   "name": "jsqel",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Fullstack JS framework",
   "main": "index.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "express": "^4.17.1",
     "multer": "^1.4.2",
     "pg-promise": "^9.0.0",
-    "sqlite3": "^4.0.9"
+    "sqlite3": "^4.0.9",
+    "uuid": "^3.3.3"
   }
 }

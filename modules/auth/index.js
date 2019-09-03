@@ -1,3 +1,4 @@
+const uuidv4 = require('uuid/v4')
 
 const EXPIRATION_IN_SECONDS = 3600  // 1 hour
 
@@ -7,14 +8,13 @@ const checkLength = errorMessage => value => value && value.length && value.leng
 
 const signin = {
     name : 'signin',
-    sql : 'INSERT INTO Users (username, password, role_id) VALUES (${username}, ${password}, (SELECT id FROM Roles where name=${role}) );',
+    sql : "INSERT INTO Users (id, username, password, role_id) VALUES ( ${id}, ${username}, ${password}, (SELECT id FROM Roles where name='Member') );",
     restricted : ['Public'],    // Mind the Capital
     params : {
         username : checkLength("username should be longer") ,
         password : checkLength("password should be longer") ,
-        role     : value => value && ['Admin', 'Member'].includes(value) ? ({success: true, value}) : ({success: false, message: "role should be Admin or Member" }) ,
     },
-    beforeQuery : (query, params, {encrypt} ) => Object.assign( {}, params, { password : encrypt(params.password) }) ,
+    beforeQuery : (query, params, {encrypt} ) => Object.assign( {}, params, { password : encrypt(params.password), id:uuidv4() }) ,
 }
 
 const deleteUser = {
@@ -22,7 +22,7 @@ const deleteUser = {
     sql : 'DELETE FROM Users WHERE id=${id};',
     restricted : ['Admin'],    // Mind the Capital
     params : {
-        id : value => value && !isNaN(value) ? ({success: true, value}) : ({success: false, message: "id is not valid" }),
+        id : checkLength("Invalid user id"),
     },
 }
 
@@ -58,8 +58,6 @@ const islogged = {
     params : {
         user_id : value => ({success: true, value }) ,  // Injected parameter for an authenticated query
     },
-    beforeQuery : (query, params) => params,
-    afterQuery  : (query, params, results) => results , 
 }
 
 

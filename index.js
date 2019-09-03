@@ -159,6 +159,7 @@ module.exports = ({dbUri , secret , debug=false, apiUrlBase='', staticPath = ''}
     createApiRoute(app, apiUrlBase)
 
     return {
+        jsqeldb,
         encrypt : text => encrypt(text),
         migrate :  name => jsqeldb.migrate(name),
         register : (namespace, endpoints) => endpoints.forEach( e => registerQuery(namespace, e, apiUrlBase) ),
