@@ -9,9 +9,9 @@ As a [full-stack freelance developer](https://camilab.co), I code webapps for co
 There are [many nodeJS frameworks](https://expressjs.com/en/resources/frameworks.html) : FeatherJS, Sails, LoopBack, NestJS, ...
 It is hard to choose the one that fit all our projects, and it is usually painfull to work with several frameworks beacause of their learning curve.
 
-And I don't like ORMs. I think they turn the databases engines into powerless softwares. I prefer to take advantages of the amazing built-in features of Postgresql, rather than encapulating them in an ORM.
+And I don't like ORMs. I think they turn the database engines into powerless softwares. I prefer to take advantages of the amazing built-in features of Postgresql, rather than encapsulating them in an ORM.
 
-I've searched a lightweight Express framework, that could simply expose API endpoints based on SQL queries. I did not find it.
+I've searched a lightweight Express framework, that **simply exposes API endpoints based on parameterized SQL queries**. I did not find it.
 
 ## Jsqel in a nutshell
 
@@ -27,14 +27,15 @@ const hello = {
 
 Register your query and launch your server :
 ```javascript
-const app = jsqel({ dbUri : 'postgresql://user:pwd@postgresql.host.com:5432/db_name',
+const app = jsqel({ dbUri : 'sqlite://jsqel.db',
                     secret :'anysecretkeyyouwant',
                     debug  : process.env.NODE_ENV !== 'production',
-                    staticPath : '../frontend/build',
                     apiUrlBase : ''
                 })
+
 app.register(namespace="test", [hello])
 app.run(5000)
+
 // Now API is available at : http://localhost:5000/test/hello
 ```
 
@@ -107,7 +108,12 @@ const direct = {
 module.exports = { queries :[ direct ] }
 ```
 
-## Boilerplate
+## Connect to front-end
+
+In your React components, just use a custom hook to call you API :
+```javascript
+const [{results, error, loading}, refresh]    = useJsqel('test/hello', { sendItNow:true})
+```
 
 A full boilerplate is available [here](https://github.com/Herve07h22/jsqel_boilerplate), including :
 - backend with auth and admin modules

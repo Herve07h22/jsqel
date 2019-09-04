@@ -51,18 +51,9 @@ const executeQuery = (query, params={} ) => {
         const reducedParams = paramsReducer(query, params)
 
         if (sqliteConnexion) {
-            // SQLite named parameters : SELECT * FROM my_table WHERE id=$param 
-            // Replace ${xxx} by $xxx
-            let queryClone  = query.slice(0)
-            var listeOfParameters = query.match(/\$\{(\w+)\}/g)
-            if (listeOfParameters) {
-                queryClone  = listeOfParameters.reduce( (acc, val) => acc.replace(val, '$'+val.slice(2, -1)), queryClone)
-            }
-            // Replace xxx by $xxx
-            let paramsClone = Object.entries(reducedParams).reduce((acc, val) => Object.assign(acc, { ['$'+val[0]]: val[1] }), {} )
-
-            console.log("Executing modified query :", queryClone, paramsClone) 
-            return new Promise( (resolve, reject) => sqliteConnexion.all(queryClone, paramsClone, (err,rows) => err ? reject(err) : resolve(rows)) )
+            const processedQuery = pgp.as.format(query, reducedParams)
+            console.log("Executing query :", processedQuery)
+            return new Promise( (resolve, reject) => sqliteConnexion.all(processedQuery, (err,rows) => err ? reject(err) : resolve(rows)) )
         }
 
         // pg-promise PostGresql named parameters : SELECT * FROM my_table WHERE id=${param} and num=${num} ORDER BY num
