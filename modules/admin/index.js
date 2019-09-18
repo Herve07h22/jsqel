@@ -20,7 +20,7 @@ const get_list_with_filter = {
     beforeQuery : (query, params ) => Object.assign( {}, params, params.filter ),
     alterQuery : (query, params) => {
         const props = Object.keys(params.filter)
-        const formattedSet = props.map( (m,i) => m + '=${' + m + '}') // creating the formatting parameters; 
+        const formattedSet = props.map( (m,i) =>  m.startsWith('_') ? m.slice(1) + ' LIKE ${' + m + '}' : m+'=${' + m + '}'   ) // creating the formatting parameters; 
         const joinedSet = formattedSet.join(' AND ')
         return query.sql.replace('ALL_FILTERS', joinedSet)
     }
@@ -39,7 +39,7 @@ const count_list_with_filter = {
     beforeQuery : (query, params ) => Object.assign( {}, params, params.filter ),
     alterQuery : (query, params) => {
         const props = Object.keys(params.filter)
-        const formattedSet = props.map( (m,i) => m + '=${' + m + '}') // creating the formatting parameters; 
+        const formattedSet = props.map( (m,i) =>  m.startsWith('_') ? m.slice(1) + ' LIKE ${' + m + '}' : m+'=${' + m + '}'   ) // creating the formatting parameters; 
         const joinedSet = formattedSet.join(' AND ')
         return query.sql.replace('ALL_FILTERS', joinedSet)
     }
