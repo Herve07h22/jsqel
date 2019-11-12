@@ -5,17 +5,19 @@ var fs = require("fs")
 
 var sqliteConnexion = null
 var pgConnexion     = null
+var dbLogger        = console.log
 
 const connect = (uri='', debug=false) => {
+    dbLogger = debug ? console.log : ()=>null
     // SQLite3 or Postgres ?
     if (uri && uri.slice(0,9)==='sqlite://') {
-        console.log("Creating SQLite3 connexion :", uri.slice(9))
+        dbLogger("Creating SQLite3 connexion :", uri.slice(9))
         sqliteConnexion = new sqlite3.Database(uri.slice(9))
-        console.log("Connexion OK :", sqliteConnexion)
+        dbLogger("Connexion OK :", sqliteConnexion)
     }
 
     if (uri && uri.slice(0,13)==='postgresql://') {
-        console.log("Creating Postgresql connexion :", uri.slice(13))
+        dbLogger("Creating Postgresql connexion :", uri.slice(13))
         // Connection string should be like : postgres://john:pass123@localhost:5432/products
         pgConnexion = pgp(uri);
     }
@@ -32,40 +34,40 @@ const isEmpty = val => (val === undefined ) ? true : false // null or zero may b
 
 const paramsReducer = ( query, params={} ) => {
     // Remove unnecessary params
-    console.log("Reducing params :", params)
+    dbLogger("Reducing params :", params)
     var reducedParams = {}
     const listeOfParameters = query.match(/\$\{(\w+)(:name)?(:csv)?(:value)?\}/g)
-    console.log("listeOfParameters :", listeOfParameters)
+    dbLogger("listeOfParameters :", listeOfParameters)
     if (listeOfParameters && listeOfParameters.length) {
         let expectedParams = listeOfParameters.map( p => p.slice(2, -1).replace(':name','').replace(':csv','').replace(':value','') )
-        console.log("expectedParams :", expectedParams)
+        dbLogger("expectedParams :", expectedParams)
         reducedParams = expectedParams.reduce( (acc, val) => isEmpty(params[val]) ? acc : Object.assign(acc, {[val]:params[val]}) , {} )
     }
-    console.log("reducedParams :", reducedParams)
+    dbLogger("reducedParams :", reducedParams)
     return reducedParams
 }
 
 const executeQuery = (query, params={} ) => {
-    console.log("Executing :", query, params)
+    dbLogger("Executing :", query, params)
     try {
         const reducedParams = paramsReducer(query, params)
 
         if (sqliteConnexion) {
             const processedQuery = pgp.as.format(query, reducedParams)
-            console.log("Executing query :", processedQuery)
+            dbLogger("Executing query :", processedQuery)
             return new Promise( (resolve, reject) => sqliteConnexion.all(processedQuery, (err,rows) => err ? reject(err) : resolve(rows)) )
         }
 
         // pg-promise PostGresql named parameters : SELECT * FROM my_table WHERE id=${param} and num=${num} ORDER BY num
         if (pgConnexion) {
-            console.log("Executing query :", query, reducedParams)
+            dbLogger("Executing query :", query, reducedParams)
             // Encapsulate the query in a transaction.
             return pgConnexion.tx(t => t.any( query, reducedParams))
         }
         return new Promise( (resolve, reject) => reject(`The query ${query} cannot be executed because there is no db connection available`) )
     }
     catch (e) {
-        console.log(e)
+        dbLogger(e)
         return new Promise( (resolve, reject) => reject(`The query ${query} cannot be executed`) )
     }
 }
@@ -73,12 +75,12 @@ const executeQuery = (query, params={} ) => {
 const migrate = name => {
     if (!name) return new Promise( (resolve, reject) => resolve() )
 
-    console.log('Migrating : ', name)
+    dbLogger('Migrating : ', name)
 
     return new Promise( (resolve, reject) => {
         fs.readFile(name, (err, buf) => {
             if (err) {
-                console.log("Error reading file ", name)
+                dbLogger("Error reading file ", name)
                 reject(err)
             }
             else {
