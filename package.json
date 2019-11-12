@@ -1,6 +1,6 @@
 {
   "name": "jsqel",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Fullstack JS framework",
   "main": "index.js",
   "scripts": {
