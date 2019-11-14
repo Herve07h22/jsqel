@@ -36,10 +36,10 @@ const paramsReducer = ( query, params={} ) => {
     // Remove unnecessary params
     dbLogger("Reducing params :", params)
     var reducedParams = {}
-    const listeOfParameters = query.match(/\$\{(\w+)(:name)?(:csv)?(:value)?\}/g)
+    const listeOfParameters = query.match(/\$\{(\w+)(:name)?(:csv)?(:value)?(:json)?\}/g)
     dbLogger("listeOfParameters :", listeOfParameters)
     if (listeOfParameters && listeOfParameters.length) {
-        let expectedParams = listeOfParameters.map( p => p.slice(2, -1).replace(':name','').replace(':csv','').replace(':value','') )
+        let expectedParams = listeOfParameters.map( p => p.slice(2, -1).replace(':name','').replace(':csv','').replace(':value','').replace(':json','') )
         dbLogger("expectedParams :", expectedParams)
         reducedParams = expectedParams.reduce( (acc, val) => isEmpty(params[val]) ? acc : Object.assign(acc, {[val]:params[val]}) , {} )
     }
