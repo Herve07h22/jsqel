@@ -6,6 +6,8 @@ const migrations = __dirname+'/migrations.sql'
 
 const checkLength = errorMessage => value => value && value.length && value.length>4 ? ({success: true, value}) : ({success: false, message: errorMessage })
 
+// API to add new registered user. You should probably add some data.
+// To register new Admin user : await app.jsqeldb.executeQuery("INSERT INTO users (id, username, password, role_id) VALUES ( ${id}, ${username}, ${password}, 2) ON CONFLICT DO NOTHING;", {id:uuidv4(), username:"Admin", password:app.encrypt("pwdpwd")} )
 const signin = {
     name : 'signin',
     sql : "INSERT INTO Users (id, username, password, role_id) VALUES ( ${id}, ${username}, ${password}, (SELECT id FROM Roles where name='Member') );",
@@ -20,7 +22,7 @@ const signin = {
 const deleteUser = {
     name : 'delete_user',
     sql : 'DELETE FROM Users WHERE id=${id};',
-    restricted : ['Admin'],    // Mind the Capital
+    restricted : ['Admin'],    
     params : {
         id : checkLength("Invalid user id"),
     },

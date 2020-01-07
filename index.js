@@ -51,7 +51,8 @@ const checkAuthorization = (query, params, headers ) => {
             logger('Expiration Checking:', decodedData.exp && Number(decodedData.exp) > Date.now())
             // Is the token still valid and provides an role granted to execute the query ?
             if (decodedData.exp && Number(decodedData.exp) > Date.now() && decodedData.role && query.restricted.includes(decodedData.role) ) {
-                return [true, Object.assign({}, decodedData, params ) ]
+                // params are overridden by decodedData to prevent malicious injection of data
+                return [true, Object.assign({}, params, decodedData ) ]
             }
         }
     }
