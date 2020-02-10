@@ -28,6 +28,12 @@ const deleteUser = {
     },
 }
 
+const listUsers = {
+    name : 'list_users',
+    sql : 'SELECT * FROM Users;',
+    restricted : ['Admin'],    
+}
+
 const buildToken = (query, params, results, encrypt) => {
     if (results.length && results[0].user_id && results[0].username && results[0].role ) {
         // Build a token
@@ -63,4 +69,4 @@ const islogged = {
 }
 
 
-module.exports = { migrations, queries : [ signin, login, islogged, deleteUser ]}
+module.exports = { migrations, queries : [ signin, login, islogged, deleteUser, listUsers ]}
