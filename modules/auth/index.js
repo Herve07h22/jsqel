@@ -61,7 +61,7 @@ const login = {
 
 const islogged = {
     name : 'islogged',
-    sql : 'SELECT Users.username as username, Roles.name as role FROM Users, Roles where user_id=${user_id};',
+    sql : 'SELECT users.username as username, Roles.name as role FROM users, Roles where id=${user_id};',
     restricted : ['Member', 'Admin'], 
     params : {
         user_id : value => ({success: true, value }) ,  // Injected parameter for an authenticated query
