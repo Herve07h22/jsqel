@@ -59,7 +59,7 @@ const uploadRoute = (app, namespace, apiUrlBase) => {
 const upload = {
   name : 'upload',
   route : uploadRoute,
-  restricted : ['Member'],    // Mind the Capital
+  restricted : ['Admin', 'Member'],    // Mind the Capital
 }
 
 module.exports = { queries :[ upload ] }
