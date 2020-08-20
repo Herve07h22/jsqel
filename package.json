@@ -4,7 +4,7 @@
   "description": "Fullstack JS framework",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --detectOpenHandles"
   },
   "repository": {
     "type": "git",
@@ -29,8 +29,10 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "multer": "^1.4.2",
-    "pg-promise": "^9.0.0",
-    "sqlite3": "^4.0.9",
-    "uuid": "^3.3.3"
+    "pg-promise": "^10.5.8",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "jest": "^26.4.1"
   }
 }
