@@ -2,6 +2,8 @@
 // docker run --rm  --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 postgres
 // then export DATABASE_URI env variable :
 // export DATABASE_URI=postgresql://postgres:docker@localhost:5432/postgres
+// or (if you run this test inside a docker container)
+// export DATABASE_URI=postgresql://postgres:docker@host.docker.internal:5432/postgres
 
 const launchJsqelServer = async () => {
   const { spawn } = require("child_process");
@@ -18,6 +20,7 @@ const launchJsqelServer = async () => {
       console.log(`testinstance: ${data}`);
       if (!curlInstance) {
         curlInstance = spawn("curl", ["-X", "POST", "http://localhost:5000/test/hello"]);
+
         curlInstance.stdout.on("data", (data) => {
           dataReturnedByJsqel = data;
         });
