@@ -93,8 +93,9 @@ const createApiRoute = (app, apiUrlBase) =>
           logger("Processing direct route");
           // Add credentials
           req.paramsWithCredentials = paramsWithCredentials;
-          // Add a hook to execute queries
+          // Add a hook to execute queries and to build token
           req.executeQuery = jsqeldb.executeQuery;
+          req.encrypt = encrypt;
           return next();
         }
 
