@@ -1,6 +1,11 @@
 const jsqel = require("../index");
-const databaseUri = process.env.DATABASE_URI;
-const testTable = process.env.TEST_TABLE;
+
+var jsqelArgs = process.argv.slice(2);
+if (jsqelArgs.lenght !== 2) {
+  console.log("Error : this test instance expect 2 parameters : the database URI and the name of a table.");
+}
+const databaseUri = jsqelArgs[0];
+const testTable = jsqelArgs[1];
 
 const hello = {
   name: "hello",

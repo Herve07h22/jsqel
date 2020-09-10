@@ -8,7 +8,7 @@
 // Test API server
 const { spawn } = require("child_process");
 var testinstanceIsready = false;
-const testinstance = spawn("node", ["./tests/testinstance.js"]);
+const testinstance = spawn("node", ["./tests/testinstance.js", process.env.DATABASE_URI, process.env.TEST_TABLE]);
 testinstance.stdout.on("data", (data) => {
   testinstanceIsready = true;
 });
