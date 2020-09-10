@@ -100,7 +100,8 @@ const createApiRoute = (app, apiUrlBase) =>
         }
 
         // Execute validation tobuild an array like [ {success, key, value, message}, {success, key, value, message} ]
-        logger("query.params :", query.params);
+        logger("Expected parameters :", query.params);
+        logger("Received parameters :", paramsWithCredentials);
         const paramsValidation = query.params
           ? Object.keys(query.params).map((key) =>
               Object.assign({}, query.params[key](paramsWithCredentials[key]), { key })
@@ -128,13 +129,20 @@ const createApiRoute = (app, apiUrlBase) =>
             : validatedParams;
           logger("paramsProcessedByBeforeQuery :", paramsProcessedByBeforeQuery);
 
-          // Alter query if there is alterQuery hook
-          const sqlQuery = query.alterQuery
-            ? query.alterQuery(query, validatedParams, { jsqeldb, encrypt })
-            : query.sql;
+          // SQL query or JS ?
+          let queryResult;
+          if (query.js) {
+            logger("Running JS function");
+            queryResult = await query.js(paramsProcessedByBeforeQuery);
+          } else {
+            // Alter query if there is alterQuery hook
+            const sqlQuery = query.alterQuery
+              ? query.alterQuery(query, validatedParams, { jsqeldb, encrypt })
+              : query.sql;
 
-          // Compute the query
-          const queryResult = await jsqeldb.executeQuery(sqlQuery, paramsProcessedByBeforeQuery);
+            // Compute the query
+            queryResult = await jsqeldb.executeQuery(sqlQuery, paramsProcessedByBeforeQuery);
+          }
           logger("queryResult :", queryResult);
 
           // Process results if there is any beforeQuery hook
@@ -171,7 +179,7 @@ const registerQuery = (namespace, query, apiUrlBase) => {
 
 module.exports = ({ dbUri, secret, debug = false, apiUrlBase = "", staticPath = "" }) => {
   logger = debug ? console.log : () => null;
-  logger("staticPath is", staticPath);
+  logger("Jsqel is starting");
 
   if (Array.isArray(staticPath)) {
     staticPath.forEach((s) => app.use(s.route, express.static(s.path)));
@@ -191,6 +199,6 @@ module.exports = ({ dbUri, secret, debug = false, apiUrlBase = "", staticPath = 
     register: (namespace, endpoints) => endpoints.forEach((e) => registerQuery(namespace, e, apiUrlBase)),
     migrateAndRegister: (namespace, { migrations, queries }) =>
       jsqeldb.migrate(migrations).then(queries.forEach((e) => registerQuery(namespace, e, apiUrlBase))),
-    run: (port = 5000) => app.listen(port, () => console.log("Running on port :", port)),
+    run: (port = 5000) => app.listen(port, () => console.log("Listening on port :", port)),
   };
 };
