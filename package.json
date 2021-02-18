@@ -1,6 +1,6 @@
 {
   "name": "jsqel",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Fullstack JS framework",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "uuid": "^8.3.0"
   },
   "devDependencies": {
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "jest": "^26.4.1"
   }
 }
