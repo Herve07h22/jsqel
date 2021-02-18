@@ -52,10 +52,16 @@ afterAll(() => {
 test("DATABASE_URI env variable is set", () => {
   const databaseUri = process.env.DATABASE_URI || "not set";
   expect(databaseUri).not.toBe("not set");
-  const databaseUriStartsWithPostgresql = databaseUri.startsWith("postgresql://");
+  const databaseUriStartsWithPostgresql = databaseUri.startsWith(
+    "postgresql://"
+  );
   expect(databaseUriStartsWithPostgresql).toBe(true);
 });
 
 test("A wrong DATABASE_URI leads to a clear error message", () => {
-  expect(message).toEqual(expect.stringContaining('Database connexion error : database "wrong" does not exist'));
+  expect(message).toEqual(
+    expect.stringContaining(
+      'Database connexion error : database "wrong" does not exist'
+    )
+  );
 });

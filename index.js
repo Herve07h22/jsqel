@@ -2,7 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const crypto = require("crypto");
-const jsqeldb = require("./jsqeldb.js");
+var jsqeldb = require("./jsqeldb.js");
+const { checkHasExpectedFunctions } = require("./checkHasExpectedFunctions");
 
 const app = express();
 //app.use(bodyParser.json())
@@ -35,7 +36,10 @@ const encrypt = (text) => {
 const checkAuthorization = (query, params, headers) => {
   if (query.restricted.includes("Public")) return [true, params];
 
-  if (headers.authorization && headers.authorization.split(" ")[0] === "Bearer") {
+  if (
+    headers.authorization &&
+    headers.authorization.split(" ")[0] === "Bearer"
+  ) {
     logger("Authorization : ", headers.authorization);
 
     let token = headers.authorization.split(" ")[1];
@@ -45,7 +49,9 @@ const checkAuthorization = (query, params, headers) => {
     logger("decodedToken : ", decodedToken);
 
     // First part is base64 encoded object, which is liable to be a fake one
-    let decodedData = JSON.parse(Buffer.from(decodedToken[0], "base64").toString("utf8"));
+    let decodedData = JSON.parse(
+      Buffer.from(decodedToken[0], "base64").toString("utf8")
+    );
     logger("decodedData : ", decodedData);
 
     // So let's sign it and compare the result
@@ -55,7 +61,10 @@ const checkAuthorization = (query, params, headers) => {
 
     if (signedData === decodedToken[1]) {
       // This is ok
-      logger("Expiration Checking:", decodedData.exp && Number(decodedData.exp) > Date.now());
+      logger(
+        "Expiration Checking:",
+        decodedData.exp && Number(decodedData.exp) > Date.now()
+      );
       // Is the token still valid and provides an role granted to execute the query ?
       if (
         decodedData.exp &&
@@ -84,7 +93,11 @@ const createApiRoute = (app, apiUrlBase) =>
       logger("Controller is processing :", query, params);
 
       // Check if restricted
-      const [authorized, paramsWithCredentials] = checkAuthorization(query, params, req.headers);
+      const [authorized, paramsWithCredentials] = checkAuthorization(
+        query,
+        params,
+        req.headers
+      );
       logger("Authorized ? :", authorized, paramsWithCredentials);
 
       if (authorized) {
@@ -104,13 +117,17 @@ const createApiRoute = (app, apiUrlBase) =>
         logger("Received parameters :", paramsWithCredentials);
         const paramsValidation = query.params
           ? Object.keys(query.params).map((key) =>
-              Object.assign({}, query.params[key](paramsWithCredentials[key]), { key })
+              Object.assign({}, query.params[key](paramsWithCredentials[key]), {
+                key,
+              })
             )
           : [];
         logger("paramsValidation :", paramsValidation);
 
         // If anything wrong, send an error
-        const paramsErrors = paramsValidation.filter((result) => result.success !== true);
+        const paramsErrors = paramsValidation.filter(
+          (result) => result.success !== true
+        );
         if (paramsErrors && paramsErrors.length) {
           logger("paramsErrors :", paramsErrors);
           res.status(400).json(paramsErrors);
@@ -127,13 +144,20 @@ const createApiRoute = (app, apiUrlBase) =>
           const paramsProcessedByBeforeQuery = query.beforeQuery
             ? query.beforeQuery(query, validatedParams, { jsqeldb, encrypt })
             : validatedParams;
-          logger("paramsProcessedByBeforeQuery :", paramsProcessedByBeforeQuery);
+          logger(
+            "paramsProcessedByBeforeQuery :",
+            paramsProcessedByBeforeQuery
+          );
 
           // SQL query or JS ?
           let queryResult;
           if (query.js) {
             logger("Running JS function");
-            queryResult = await query.js(paramsProcessedByBeforeQuery);
+            queryResult = await query.js(
+              paramsProcessedByBeforeQuery,
+              jsqeldb,
+              encrypt
+            );
           } else {
             // Alter query if there is alterQuery hook
             const sqlQuery = query.alterQuery
@@ -141,22 +165,36 @@ const createApiRoute = (app, apiUrlBase) =>
               : query.sql;
 
             // Compute the query
-            queryResult = await jsqeldb.executeQuery(sqlQuery, paramsProcessedByBeforeQuery);
+            queryResult = await jsqeldb.executeQuery(
+              sqlQuery,
+              paramsProcessedByBeforeQuery
+            );
           }
           logger("queryResult :", queryResult);
 
           // Process results if there is any beforeQuery hook
           const resultsProcessedByAfterQuery = query.afterQuery
-            ? query.afterQuery(query, validatedParams, queryResult, { jsqeldb, encrypt })
+            ? query.afterQuery(query, validatedParams, queryResult, {
+                jsqeldb,
+                encrypt,
+              })
             : queryResult;
-          logger("resultsProcessedByAfterQuery :", resultsProcessedByAfterQuery);
+          logger(
+            "resultsProcessedByAfterQuery :",
+            resultsProcessedByAfterQuery
+          );
 
           // And send, taking an optional status in the results
           // If the query includes a template file : send the render. If not, send the json
           if (query.template) {
             res.setHeader("Content-Type", "text/html");
-            res.status(resultsProcessedByAfterQuery.status || 200).render(query.template, resultsProcessedByAfterQuery);
-          } else res.status(resultsProcessedByAfterQuery.status || 200).json(resultsProcessedByAfterQuery);
+            res
+              .status(resultsProcessedByAfterQuery.status || 200)
+              .render(query.template, resultsProcessedByAfterQuery);
+          } else
+            res
+              .status(resultsProcessedByAfterQuery.status || 200)
+              .json(resultsProcessedByAfterQuery);
 
           return;
         }
@@ -177,28 +215,66 @@ const registerQuery = (namespace, query, apiUrlBase) => {
   if (query.route) query.route(app, namespace, apiUrlBase || "");
 };
 
-module.exports = ({ dbUri, secret, debug = false, apiUrlBase = "", staticPath = "" }) => {
+module.exports = ({
+  dbUri,
+  secret,
+  debug = false,
+  apiUrlBase = "",
+  staticPath = "",
+}) => {
   logger = debug ? console.log : () => null;
   logger("Jsqel is starting");
 
   if (Array.isArray(staticPath)) {
     staticPath.forEach((s) => app.use(s.route, express.static(s.path)));
   } else {
-    if (staticPath) app.use(staticPath.route || "/", express.static(staticPath.path));
+    if (staticPath)
+      app.use(staticPath.route || "/", express.static(staticPath.path));
   }
 
   SECRET = secret;
 
-  jsqeldb.connect(dbUri, debug);
+  // if dbUri is a Class or an Object, it takes over the default Postgresql dbService
+  // It has to expose 4 API :
+  // { connect, migrate, executeQuery, getDbConnexion }
+  if (typeof dbUri === "string") {
+    console.log(
+      "Jsqel is using the default Postgresql dbService with dbUri:",
+      dbUri
+    );
+    jsqeldb.connect(dbUri, debug);
+  } else {
+    if (
+      checkHasExpectedFunctions(dbUri, [
+        "connect",
+        "migrate",
+        "executeQuery",
+        "getDbConnexion",
+      ])
+    ) {
+      console.log("Jsqel is using a custom dbService");
+      jsqeldb = dbUri;
+      jsqeldb.connect(debug);
+    } else {
+      throw new Error(
+        "The dbUri argument you passed is neither a string nor a valid DB service implementing connect, migrate, executeQuery and getDbConnexion."
+      );
+    }
+  }
+
   createApiRoute(app, apiUrlBase);
 
   return {
     jsqeldb,
     encrypt: (text) => encrypt(text),
     migrate: (name) => jsqeldb.migrate(name),
-    register: (namespace, endpoints) => endpoints.forEach((e) => registerQuery(namespace, e, apiUrlBase)),
+    register: (namespace, endpoints) =>
+      endpoints.forEach((e) => registerQuery(namespace, e, apiUrlBase)),
     migrateAndRegister: (namespace, { migrations, queries }) =>
-      jsqeldb.migrate(migrations).then(queries.forEach((e) => registerQuery(namespace, e, apiUrlBase))),
-    run: (port = 5000) => app.listen(port, () => console.log("Listening on port :", port)),
+      jsqeldb
+        .migrate(migrations)
+        .then(queries.forEach((e) => registerQuery(namespace, e, apiUrlBase))),
+    run: (port = 5000) =>
+      app.listen(port, () => console.log("Listening on port :", port)),
   };
 };

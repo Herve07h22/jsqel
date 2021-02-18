@@ -1,8 +1,12 @@
 const jsqel = require("../index");
 
 var jsqelArgs = process.argv.slice(2);
-if (jsqelArgs.lenght !== 2) {
-  console.log("Error : this test instance expect 2 parameters : the database URI and the name of a table.");
+if (jsqelArgs.length !== 2) {
+  console.log(
+    "Error : this test instance expect 2 parameters : the database URI and the name of a table."
+  );
+  console.log("Received :", jsqelArgs);
+  throw new Error("Cannot start the test instance");
 }
 const databaseUri = jsqelArgs[0];
 const testTable = jsqelArgs[1];
@@ -26,7 +30,9 @@ const hello_parameter = {
   restricted: ["Public"],
   params: {
     test_id: (value) =>
-      value ? { success: true, value } : { success: false, message: "test_id is missing or is zero" },
+      value
+        ? { success: true, value }
+        : { success: false, message: "test_id is missing or is zero" },
   },
 };
 
