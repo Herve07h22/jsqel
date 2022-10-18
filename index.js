@@ -174,7 +174,7 @@ const createApiRoute = (app, apiUrlBase) =>
 
           // Process results if there is any beforeQuery hook
           const resultsProcessedByAfterQuery = query.afterQuery
-            ? query.afterQuery(query, validatedParams, queryResult, {
+            ? await query.afterQuery(query, validatedParams, queryResult, {
                 jsqeldb,
                 encrypt,
               })
