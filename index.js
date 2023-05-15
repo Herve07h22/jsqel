@@ -266,6 +266,7 @@ module.exports = ({
 
   return {
     jsqeldb,
+    app,
     encrypt: (text) => encrypt(text),
     migrate: (name) => jsqeldb.migrate(name),
     register: (namespace, endpoints) =>
